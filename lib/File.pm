@@ -10,7 +10,17 @@ use Carp;
 
 sub new {
     my($class, $path, %args) = @_;
-    return Paths::Factory->new($path, %args, is_file => 1);
+
+    croak "File is undefined" if !defined $path;
+
+    my $file = Paths::Factory->new($path, %args, is_file => 1);
+
+    my $raw_file = $file->{file};
+    croak "'$path' does not contain a file"
+      if !defined $file or !ref $file or
+         !defined $raw_file or !length $raw_file or $raw_file eq '..' or $raw_file eq '.';
+
+    return $file;
 }
 
 
