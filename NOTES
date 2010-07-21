@@ -1,0 +1,344 @@
+Notes on the perl5i file and dir objects.
+
+Purpose
+    * make cross-platform programming second nature
+    * make paths easy to manipulate
+    * make doing things to paths as easy as at the shell
+
+
+File and Dir objects are in general...
+    * stateless
+    * immutable
+        * exceptions include volume, type, encoding, cleanup and any caching
+    * throw exceptions
+        * exceptions can be introspected to get errno
+
+
+Modules surveyd for ideas:
+    * File::Spec
+    * File::Copy
+    * Path::Class
+    * Path::Extended
+    * File::Path
+    * File::Fu
+    * perlfunc
+    * ExtUtils::Command
+    * File::Temp
+    * File::Find
+    * File::Find::Rule
+    * IPC::Run
+    * Tie::File
+    * IO::All
+    * File::ReadBackwards
+    * File::Next
+    * Ruby Dir, File, Find
+
+
+Other considerations (mostly awkward class data)
+      File::Temp (tempfile, tempdir, etc...)
+      homedir
+      PATH
+      $^X
+      cwd
+      program directory
+      /dev/null
+      rootdir
+      pathsep
+      network filepaths?
+          UNC \\computer\resource\
+          file URLs
+          other URLs (smb?)
+          POSIX with host (scp foo hostname:/some/path)
+
+METHODS
+*******
+
+Of the form:
+method_name
+        example of use
+            options (placed in a hash ref as the last argument
+
+
+File->temp
+Dir->temp
+            parent  (default wherever File::Temp wants)
+            cleanup (default true)
+            template
+File->homedir
+        Returns $ENV{HOME} or equivalent
+File->path
+        Returns $ENV{PATH} split
+File->program_name
+        equivalent to $^X
+File->null
+Dir->rootdir
+
+
+SCALAR->file
+SCALAR->dir
+        $file = $string->file;
+        $dir = $string->dir;
+            type (win32, vms, unix, url, native) (default unix)
+
+ARRAY->file
+ARRAY->dir
+        $file = @array->file;
+        $dir = @array->dir;
+            absolute (default false)
+            type
+
+copy (preserves attributes)
+        $new_file = $file->copy($new_file);  cp file new_file
+        $new_file = $file->copy($new_dir);   cp file new_dir
+        $new_dir  = $dir->copy($new_dir);    cp -r dir new_dir
+move
+        $new_file = $file->move($new_file);  mv file new_file
+        $new_dir = $file->move($new_dir);   mv file new_dir
+        $new_dir = $dir->move($new_dir);    mv dir new_dir
+create
+        $success = $dir->create;            mkdir -p $dir
+                mode (default 0777)
+                parents (default true)
+delete
+        $deleted = $file->delete;           rm -f $file
+        $deleted = $dir->delete;            rm -rf $dir
+                verbose (default false)
+                keep_root (default false) (only for dir)
+                if_empty (default false)  (only for dir)
+                force (default true)
+split
+        (@dirs, $file) = $file->split;
+        @dirs = $dir->split;
+file
+        $file = $file->file;   # identity
+        $dir->file; # error
+        $path = $dir->file($file);
+dir
+        $parent = $file->dir;  # same as parent
+        $dir = $dir->dir;      # identity
+parent
+        $parent = $file->parent;
+        $parent = $dir->parent;
+subdir
+        $subdir = $dir->subdir($dir2);
+        $file->subdir; # error
+pop
+push
+shift
+unshift
+        manipulate bits of the path
+as_string
+        $string = $file->as_string;
+        same for dir
+                type (win32, vms, unix)
+as_native
+        like as_string but sets type from $^O
+type
+        get/set the path type (win32, vms, unix)
+        defaults to type from $^O
+volume
+        $volume = $file->volume;
+        $file->volume($volume);
+        same for dir
+run
+        $output = $file->run(\@args);
+        @output = $file->run(\@args);
+                combine (default false)
+                stderr  (give it a ref)
+                stdin   (an array ref to feed it?
+                         or a callback?)
+compare
+        $is_same = $file->compare($file2);
+          per_line => sub { $_[0] eq $_[1] }
+walk
+        $dir->walk(\&callback, \%options);
+            depth (default infinity)
+            follow_symlinks (default false)
+            depth_first (default true)
+            verbose (default false)
+            sub callback {
+                my $path = shift;
+                ...
+            }
+          not sure exactly what to do
+          how does one prune the walk?
+lstat
+stat
+        $stat = $file->stat;
+        $stat = $dir->stat;
+open
+        $fh = $file->open;
+                mode
+                encoding
+                lock
+                binmode
+        $dh = $dir->open;
+openr
+openw
+opena
+        shorthand for open with mode to read, write or append
+read
+        $lines = $file->read;
+        $dir->read;  # error
+                lock
+                encoding
+                chomp   (default false)
+                binmode
+foreach
+        $file->foreach(\&callback_per_line);
+                lock
+                encoding
+                chomp
+                binmode
+slurp
+        $content = $file->slurp;
+                lock
+                encoding
+                length
+                offset
+                binmode
+grep
+        $lines = $file->grep(sub { ... });
+        $lines = $file->grep(qr/ ... /);
+                lock
+                encoding
+                binmode
+first
+        $line = $file->first(sub/qr);
+                lock
+                encoding
+                binmode
+map
+        $lines = $file->map(sub { ... });
+        $lines = $file->map(qr/ ... /);
+                lock
+                encoding
+                binmode
+edit
+        $file->edit(\&per_line_callback);
+                lock (default false)
+                encoding
+                binmode
+write
+        $file->write($text);
+                lock
+                encoding
+                binmode
+append
+        $file->append($text);
+                lock
+                encoding
+                binmode
+prepend
+        $file->prepend($text);
+                lock
+                encoding
+                binmode
+ls
+children
+        $files = $dir->ls;
+                dotfiles (default true)
+                . and .. always ignored
+lock
+        $is_locked = $file->lock;
+        $dir->lock; # error
+                type (read, write, shared, exclusive)
+                block
+                timeout
+unlock
+        $is_locked = $file->unlock;
+                block
+                timeout
+truncate
+        $file->truncate;
+                length
+chown
+        $file->chown;
+        $dir->chown;
+                uid
+                gid
+                user
+                group
+chmod
+        $file->chmod($mode);
+        $dir->chmod($mode);
+chroot
+        $dir->chroot;
+link
+symlink
+        $dest = $file->link($dest);
+        $dest = $dir->link($dest);
+                overwrite
+readlink
+        $dest = $file->readlink;
+        $dest = $dir->readlink;
+atime
+mtime
+        $time = $file->atime;
+        $file->atime($time);
+        same for dir
+size
+        $size = $file->size;
+        $dir->size;     # error
+touch
+        $file->touch;
+                make_parent (default false)
+        $dir->touch;
+is_absolute
+is_relative
+relative
+absolute
+        $abs_path = $path->absolute(<$dir>);
+                defaults to cwd
+cleanup
+        $file->cleanup;
+        $dir->cleanup;
+resolve
+        $new_file = $file->resolve;
+        $new_dir = $dir->resolve;
+is_dir
+is_file
+is_parent
+        $dir->is_parent($path);
+        $file->is_parent; # error
+is_child
+        $dir->is_child($dir);
+        $file->is_child($dir);
+which
+        $dir = $file->which;
+                Return one or all of them?
+encoding
+binmode
+        get/set the encoding to read/write this file as
+        binmode is a shorthand for bytes
+exists
+        $file->exists;
+        $dir->exists;
+is_readable
+is_writable
+is_executable
+is_empty
+is_symlink
+is_setuid
+is_setgid
+is_sticky
+is_text
+is_binary
+        all the -r, -w stuff
+checksum
+        $checksum = $file->checksum;
+            options similar to $string->mo->checksum
+extension
+        my $extension = $file->extension;
+            Basically just returns $1 from m{\.([^.]*)$};
+temp
+        $subdir = $dir->temp;
+            cleanup (default true)
+            template
+auto_delete
+        Delete the path at the end of the process
+        Essentially turning it into a temp directory
+        $file->auto_delete(1);
+        $dir->auto_delete(1);
+compare
+diff
