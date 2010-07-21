@@ -53,4 +53,13 @@ sub as_string {
 }
 
 
+sub temp {
+    my $class = shift;
+
+    require File::Temp;
+    my($fh, $file) = File::Temp::tempfile( UNLINK => 1 );
+    return $class->new($file);
+}
+
+
 1;

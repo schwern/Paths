@@ -38,4 +38,12 @@ sub as_string {
     return $self->{string} = $dir . join("/", @{ $self->{dirs} }) . "/";
 }
 
+
+sub temp {
+    my $class = shift;
+
+    require File::Temp;
+    return $class->new( File::Temp::tempdir( CLEANUP => 1 ) );
+}
+
 1;
