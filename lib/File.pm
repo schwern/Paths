@@ -96,4 +96,15 @@ sub opena {
     return $_[0]->open(">>");
 }
 
+
+sub touch {
+    my $file = shift;
+
+    my $time = time;
+    $file->opena;
+    utime($time, $time, $file) or croak "Could not set time on $file: $!";
+
+    return 1;
+}
+
 1;
