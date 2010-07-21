@@ -62,4 +62,38 @@ sub temp {
 }
 
 
+sub open {
+    my($self, $mode) = @_;
+
+    $mode //= '<';
+
+    state $mode_names = {
+        "<"     => "reading",
+        ">"     => "writing",
+        ">>"    => "appending",
+        "+<"    => "read/write",
+        "+>"    => "write/read",
+    };
+
+    my $fh;
+    unless( open $fh, $mode, $_[0]) {
+        my $mode_name = $mode_names->{$mode} || $mode;
+        croak "Could not open $_[0] for $mode_name: $!";
+    }
+
+    return $fh;
+}
+
+sub openw {
+    return $_[0]->open(">");
+}
+
+sub openr {
+    return $_[0]->open("<");
+}
+
+sub opena {
+    return $_[0]->open(">>");
+}
+
 1;
