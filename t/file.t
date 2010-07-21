@@ -10,8 +10,10 @@ use Test::More;
 # Simple file
 {
     my $file = File->new("/path/to/some/file");
+    isa_ok $file, "File";
     is $file->file, "file";
     is $file->dir, "/path/to/some/";
+    isa_ok $file->dir, "Dir";
     ok $file->is_absolute;
     ok !$file->volume;
     is $file, "/path/to/some/file";
