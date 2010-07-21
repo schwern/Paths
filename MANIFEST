@@ -1,0 +1,12 @@
+.perlcriticrc
+.perltidyrc
+Build.PL
+inc/MyBuild.pm
+lib/Dir.pm
+lib/File.pm
+lib/Paths.pm
+lib/Paths/Factory.pm
+MANIFEST			This list of files
+MANIFEST.SKIP
+t/bad_files.t
+t/file.t
