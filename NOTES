@@ -1,5 +1,3 @@
-Notes on the perl5i file and dir objects.
-
 Purpose
     * make cross-platform programming second nature
     * make paths easy to manipulate
